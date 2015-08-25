@@ -110,7 +110,7 @@ This behavior is used to add find capabilities on the context element.
             // Vars
             var self      = this,
                 attribute = self.indexAttribute,
-                index     = !attribute ? XP.toNumber(target) : null;
+                index     = attribute ? target : XP.toNumber(target);
 
             // Casting
             if (XP.isIndex(index)) { return index; }
