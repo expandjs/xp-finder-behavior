@@ -114,8 +114,8 @@ This behavior is used to add find capabilities on the context element.
 
             // Casting
             if (XP.isIndex(index)) { return index; }
-            if (XP.isString(target) && XP.isString(attribute, true)) { return function (element) { return XP.isElement(element) && target === element.getAttribute(attribute); }; }
-            if (XP.isElement(target) || XP.isFunction(target) || XP.isNullable(target)) { return XP.toDOMIdentity(target); }
+            if (XP.isString(target, true) && XP.isString(attribute, true)) { return function (element) { return XP.isElement(element) && target === element.getAttribute(attribute); }; }
+            if (XP.isElement(target) || XP.isFunction(target) || XP.isString(target, false) || XP.isVoid(target)) { return XP.toDOMIdentity(target); }
 
             // Asserting
             throw new XP.ArgumentError(1, 'Element, Function, number or string');
