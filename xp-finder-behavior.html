@@ -7,20 +7,22 @@ The complete set of contributors may be found at https://expandjs.github.io/CONT
 -->
 
 <!--
-This behavior is used to add find capabilities on the context element.
+A behavior used to add item finding capabilities on a custom element.
 
 @behavior xp-finder-behavior
-@description A behavior used to add find capabilities on the context element
-@keywords web app, html5, expandjs, web-components
+@description A behavior used to add item finding capabilities on a custom element
+@keywords expandjs, web app, custom elements, web-components
 @group behaviors
+@hot
+
 @homepage http://expandjs.com/elements/xp-finder-behavior
 @repository https://github.com/ExpandJS/xp-finder-behavior
 
 @behavior xp-array-behavior /bower_components/xp-array-behavior/xp-array-behavior.html
 
-@dependency polymer Polymer/polymer#^1.1.0
-@dependency expandjs ExpandJS/expandjs#0.9.11
-@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.9.11
+@dependency polymer Polymer/polymer#^1.2.0
+@dependency expandjs ExpandJS/expandjs#0.10.0
+@dependency xp-array-behavior ExpandJS/xp-array-behavior#0.10.0
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -140,38 +142,13 @@ This behavior is used to add find capabilities on the context element.
 
         /*********************************************************************/
 
-        // LISTENERS
-        listeners: {
-            'items-changed': '_itemsHandler'
-        },
+        // OBSERVERS
+        observers: [
+            '_itemsObserver(items.*)'
+        ],
 
         // PROPERTIES
         properties: {
-
-            /**
-             * The context element.
-             *
-             * @attribute context
-             * @type Element
-             */
-            context: {
-                observer: '_contextChanged',
-                type: Object,
-                value: null
-            },
-
-            /**
-             * If set to true, the selectable items are searched deep.
-             *
-             * @attribute deep
-             * @type boolean
-             * @default false
-             */
-            deep: {
-                reflectToAttribute: true,
-                type: Boolean,
-                value: false
-            },
 
             /**
              * If set to true, there are no items.
@@ -191,19 +168,29 @@ This behavior is used to add find capabilities on the context element.
             },
 
             /**
+             * If set to true, the items will be deep searched.
+             *
+             * @attribute find-deep
+             * @type boolean
+             * @default false
+             */
+            findDeep: {
+                type: Boolean,
+                value: false
+            },
+
+            /**
              * The attribute used as index.
              *
              * @attribute index-attribute
              * @type string
              */
             indexAttribute: {
-                reflectToAttribute: true,
-                type: String,
-                value: null
+                type: String
             },
 
             /**
-             * If set to true, the selector is initialized.
+             * If set to true, the items are initialized.
              *
              * @attribute initialized
              * @type boolean
@@ -219,28 +206,39 @@ This behavior is used to add find capabilities on the context element.
             },
 
             /**
-             * The selector used to recognize selectable items.
+             * An alternative context element in which search.
              *
-             * @attribute item-selector
-             * @type string
-             * @default "[selectable]"
+             * @attribute item-context
+             * @type Element
+             * @notifies
+             * @readonly
              */
-            itemSelector: {
-                reflectToAttribute: true,
-                type: String,
-                value: '[selectable]'
+            itemContext: {
+                notify: true,
+                readOnly: true
             },
 
             /**
-             * The selectable items.
+             * The selector used to recognize items.
+             *
+             * @attribute item-selector
+             * @type string
+             * @default ".item"
+             */
+            itemSelector: {
+                type: String,
+                value: '.item'
+            },
+
+            /**
+             * The found items.
              *
              * @attribute items
              * @type Array
              * @notifies
              */
             items: {
-                notify: true,
-                type: Array
+                notify: true
             },
 
             /**
@@ -264,10 +262,15 @@ This behavior is used to add find capabilities on the context element.
         /*********************************************************************/
 
         // OBSERVER
-        _contextChanged: function () {
+        _itemsObserver: function () {
 
-            // Mutating
-            if (this.contextObserver) { this.mutated(); }
+            // Vars
+            var self = this;
+
+            // Setting
+            self._setEmptyItems(!self.items || !self.items.length);
+            self._setInitialized(self.initialized || !self.emptyItems);
+            self._setSingleItem(!!self.items && self.items.length === 1);
         },
 
         /*********************************************************************/
@@ -281,8 +284,8 @@ This behavior is used to add find capabilities on the context element.
             // Setting
             if (!self.items) { self.items = []; } else { return; }
 
-            // Mutating
-            Polymer.XPFinderBehaviorImp.mutated.apply(self);
+            // Observing
+            Polymer.XPFinderBehaviorImp.mutated.apply(self, arguments);
         },
 
         // LISTENER
@@ -291,29 +294,11 @@ This behavior is used to add find capabilities on the context element.
             // Vars
             var self = this;
 
-            // Disconnecting
-            if (self.contextObserver) { self.contextObserver.disconnect(); }
-
-            // Finding
-            self.overwrite('items', XP[self.deep ? 'getElements' : 'findElements'](Polymer.dom(self.context || self), self.itemSelector));
+            // Setting
+            self.overwrite('items', XP[self.findDeep ? 'getElements' : 'findElements'](Polymer.dom(self.itemContext || self), self.itemSelector));
 
             // Observing
-            self.contextObserver = XP.onMutation(self.context || self, Polymer.XPFinderBehaviorImp.mutated.bind(self));
-        },
-
-        /*********************************************************************/
-
-        // HANDLER
-        _itemsHandler: function () {
-
-            // Vars
-            var self  = this,
-                items = self.items || [];
-
-            // Setting
-            self._setEmptyItems(items.length === 0);
-            self._setInitialized(self.initialized || items.length > 0);
-            self._setSingleItem(items.length === 1);
+            XP.onMutation(self.itemContext || self, Polymer.XPFinderBehaviorImp.mutated.bind(self));
         }
     };
 
