@@ -168,13 +168,29 @@ A behavior used to add item finding capabilities on a custom element.
             },
 
             /**
-             * If set to true, the items will be deep searched.
+             * If set to true, the items will be searched deep.
              *
              * @attribute find-deep
              * @type boolean
              * @default false
+             * @readonly
              */
             findDeep: {
+                readOnly: true,
+                type: Boolean,
+                value: false
+            },
+
+            /**
+             * If set to true, the items will be searched into the ShadowDOM.
+             *
+             * @attribute find-shadow
+             * @type boolean
+             * @default false
+             * @readonly
+             */
+            findShadow: {
+                readOnly: true,
                 type: Boolean,
                 value: false
             },
@@ -203,19 +219,6 @@ A behavior used to add item finding capabilities on a custom element.
                 readOnly: true,
                 type: Boolean,
                 value: false
-            },
-
-            /**
-             * An alternative context element in which search.
-             *
-             * @attribute item-context
-             * @type Element
-             * @notifies
-             * @readonly
-             */
-            itemContext: {
-                notify: true,
-                readOnly: true
             },
 
             /**
@@ -292,13 +295,14 @@ A behavior used to add item finding capabilities on a custom element.
         mutated: function () {
 
             // Vars
-            var self = this;
+            var self    = this,
+                context = self.findShadow ? self.root : self;
 
             // Setting
-            self.overwrite('items', XP[self.findDeep ? 'getElements' : 'findElements'](Polymer.dom(self.itemContext || self), self.itemSelector));
+            self.overwrite('items', XP[self.findDeep ? 'getElements' : 'findElements'](Polymer.dom(context), self.itemSelector));
 
             // Observing
-            XP.onMutation(self.itemContext || self, Polymer.XPFinderBehaviorImp.mutated.bind(self));
+            XP.onMutation(context, Polymer.XPFinderBehaviorImp.mutated.bind(self));
         }
     };
 
