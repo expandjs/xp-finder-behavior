@@ -295,14 +295,13 @@ A behavior used to add item finding capabilities on a custom element.
         mutated: function () {
 
             // Vars
-            var self    = this,
-                context = self.findShadow ? self.root : self;
+            var self = this;
 
             // Setting
-            self.overwrite('items', XP[self.findDeep ? 'getElements' : 'findElements'](Polymer.dom(context), self.itemSelector));
+            self.overwrite('items', XP[self.findDeep ? 'getElements' : 'findElements'](Polymer.dom(self.findShadow ? self.root : self), self.itemSelector));
 
             // Observing
-            XP.onMutation(context, Polymer.XPFinderBehaviorImp.mutated.bind(self));
+            XP.onMutation((self.findShadow && self.shadowRoot) || self, Polymer.XPFinderBehaviorImp.mutated.bind(self));
         }
     };
 
